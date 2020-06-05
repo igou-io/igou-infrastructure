@@ -18,3 +18,4 @@
       openvpn_easyrsa_install_path: "/usr/share/easy-rsa"
       openvpn_server_push_routes:
         - "10.1.1.0 255.255.255.0"
+        - "192.168.1.0 255.255.255.0"

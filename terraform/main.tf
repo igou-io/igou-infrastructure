@@ -225,6 +225,7 @@ resource "aws_instance" "openvpn_server" {
   subnet_id                   = "${aws_subnet.lab_subnet.id}"
   associate_public_ip_address = true # Instances have public, dynamic IP
   vpc_security_group_ids      = ["${aws_security_group.openvpn_server_sg.id}"]
+  source_dest_check           = false
   key_name                    = "${var.keypair_name}"
 }
 
