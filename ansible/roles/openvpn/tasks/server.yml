@@ -204,6 +204,5 @@
     value: "1"
     sysctl_set: yes
 
-- meta: flush_handlers
 
 ...

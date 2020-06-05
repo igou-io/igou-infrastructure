@@ -1,13 +1,7 @@
-OpenVPN Servers and Clients
+Lab OpenVPN AWS VPC Gateway
 ===========================
 
-For a list of VPN servers and clients, install OpenVPN and Easy-RSA
-packages and generate server and client configurations for OpenVPN
-tunnels.  Bring the VPN connections up.
-
-In this role, we follow a model in which all clients initiate tunnel
-connections to all servers, building what could be a mesh of
-point-to-point VPN connections.
+Creates a gateway between aws and your home network
 
 Requirements
 ------------
@@ -70,6 +64,7 @@ some client hosts.
 
 Author Information
 ------------------
+I originally forked this from the authors below, but this role has been heavily modified:
 
 - Stig Telfer (<stig@stackhpc.com>)
 - Bharat Kunwar (<bharat@stackhpc.com>)
