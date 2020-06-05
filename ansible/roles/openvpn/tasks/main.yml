@@ -1,0 +1,57 @@
+---
+
+# If we set these as facts, they are reachable via hostvars
+- set_fact:
+    openvpn_intra_if: "{{ ansible_default_ipv4.interface }}"
+  when: openvpn_intra_if is not defined
+- set_fact:
+    openvpn_intra_ipv4: "{{ hostvars[inventory_hostname]['ansible_' + openvpn_intra_if]['ipv4'] }}"
+  when: openvpn_intra_ipv4 is not defined
+
+- set_fact:
+    openvpn_intra_cidr: "{{ (openvpn_intra_ipv4.network + '/' + openvpn_intra_ipv4.netmask) | ipaddr('net') }}"
+  when: openvpn_intra_cidr is not defined
+
+- block:
+  - name: centos, RHEL | Install EPEL
+    package:
+      name: epel-release
+    when: ansible_os_family == "RedHat" or ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Install common packages
+    package:
+      name: 
+        - openvpn
+        - iptables
+        - iptables-persistent
+      update_cache: yes
+
+  - include_tasks: server.yml
+    when: inventory_hostname in openvpn_servers
+
+  - include_tasks: client.yml
+    when:
+      - inventory_hostname in openvpn_clients
+      - inventory_hostname != openvpn_server
+    loop: "{{ openvpn_servers }}"
+    loop_control:
+      loop_var: openvpn_server
+  when:
+    - inventory_hostname in openvpn_clients or inventory_hostname in openvpn_servers
+
+- block:
+    - name: restart openvpn server
+      service:
+        name: "openvpn@{{ inventory_hostname }}.service"
+        enabled: yes
+        state: restarted
+  when: inventory_hostname in openvpn_servers
+  
+#- meta: flush_handlers
+
+# Define routes via the local VPN endpoints,
+# for hosts not directly involved in the VPN connectivity.
+- include_tasks: hosts.yml
+  when:
+    - inventory_hostname not in openvpn_clients
+    - inventory_hostname not in openvpn_servers

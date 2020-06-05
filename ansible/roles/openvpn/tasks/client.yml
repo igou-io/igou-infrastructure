@@ -1,0 +1,44 @@
+---
+
+- name: Copy over client configuration
+  template:
+    src: client.conf.j2
+    dest: "{{ openvpn_dir }}/{{ openvpn_server }}.conf"
+  notify: restart openvpn clients
+
+- name: Create directory for server-specific files
+  file:
+    path: "{{ openvpn_dir }}/{{ openvpn_server }}"
+    state: directory
+
+- name: Copy client keys to hosts
+  copy:
+    src: "{{ openvpn_client_certs_dir }}/{{ openvpn_server }}/{{ inventory_hostname }}.{{ item }}"
+    dest: "{{ openvpn_dir }}/{{ openvpn_server }}"
+  with_items:
+    - crt
+    - key
+  notify: restart openvpn clients
+
+- name: Copy TA key and CA certificate
+  copy:
+    src: "{{ openvpn_client_certs_dir }}/{{ openvpn_server }}/{{ item }}"
+    dest: "{{ openvpn_dir }}/{{ openvpn_server }}/"
+  with_items:
+    - ca.crt
+    - ta.key
+  notify: restart openvpn clients
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+
+- name: Enable and start openvpn client
+  service:
+    name: "openvpn@{{ openvpn_server }}"
+    enabled: yes
+    state: started
+
+...

@@ -1,0 +1,24 @@
+---
+
+openvpn_servers: []
+openvpn_clients: []
+
+openvpn_server_push_routes: []
+openvpn_tunnel_cidr: "10.1.2.0/24"
+openvpn_server_proto: "tcp"
+openvpn_server_host: "{{ groups['openvpn_server_eip'][0] }}" 
+openvpn_server_port: 1194
+
+# The interface defined to be the intranet interface on this host.
+# Assumed to be the interface on which the default gateway is set.
+#openvpn_intra_if: "{{ ansible_default_ipv4.interface }}"
+#openvpn_intra_ipv4: "{{ hostvars[inventory_hostname]['ansible_' + openvpn_intr_if]['ipv4'] }}"
+#openvpn_intra_cidr: "{{ openvpn_intra_ipv4.network + '/' + openvpn_intra_ipv4.netmask | ipaddr('net') }}"
+
+openvpn_dir: "/etc/openvpn"
+openvpn_client_certs_dir: "{{ playbook_dir }}/openvpn-client-certs"
+openvpn_easyrsa_dir: "{{ openvpn_dir }}/easy-rsa"
+openvpn_easyrsa_version: 3
+openvpn_easyrsa_install_path: "/usr/share/easy-rsa/{{ openvpn_easyrsa_version }}"
+
+...
