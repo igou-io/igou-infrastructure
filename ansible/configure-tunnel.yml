@@ -1,0 +1,20 @@
+---
+# This playbook synchronises timekeeping and establishes an OpenVPN
+# tunnel between a VPN server and a number of clients.
+
+- hosts:
+    - openvpn_server_eip
+    - openvpn_clients
+  become: yes
+  roles:
+    - role: openvpn
+      openvpn_servers: "{{ groups['openvpn_server_eip'] }}"
+      openvpn_clients: "{{ groups['openvpn_clients'] }}"
+      openvpn_server_proto: "udp"
+      openvpn_dir: "/etc/openvpn"
+      openvpn_client_certs_dir: "{{ playbook_dir }}/openvpn-client-certs"
+      openvpn_easyrsa_dir: "{{ openvpn_dir }}/easy-rsa"
+      openvpn_easyrsa_version: 3
+      openvpn_easyrsa_install_path: "/usr/share/easy-rsa"
+      openvpn_server_push_routes:
+        - "10.1.1.0 255.255.255.0"

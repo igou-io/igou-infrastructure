@@ -1,0 +1,8 @@
+*/.git
+*/terraform.tfstate
+*/terraform.tfstate.backup
+*/terraform.tfvars
+ansible/inventory/inventory
+ansible/openvpn-client-certs/*
+terraform/.terraform/*
+terraform/.terraform
