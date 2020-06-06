@@ -214,7 +214,8 @@ resource "aws_instance" "haproxy" {
   vpc_security_group_ids      = ["${aws_security_group.haproxy.id}"]
   key_name                    = "${var.keypair_name}"
   tags = {
-    Role = "loadbalancer"
+    role = "loadbalancer"
+    Name = "haproxy"
   }
 }
 
@@ -227,6 +228,10 @@ resource "aws_instance" "openvpn_server" {
   vpc_security_group_ids      = ["${aws_security_group.openvpn_server_sg.id}"]
   source_dest_check           = false
   key_name                    = "${var.keypair_name}"
+  tags = {
+    role = "openvpn_server"
+    Name = "openvpn_server"
+  }
 }
 
 #resource "aws_instance" "k3os_worker" {
@@ -259,8 +264,16 @@ resource "aws_eip_association" "openvpn_server_eip_assoc" {
   allocation_id = "${aws_eip.openvpn_server_eip.id}"
 }
 
+resource "aws_eip_association" "haproxy_eip_assoc" {
+  count         = "${var.haproxy_eip != null ? 1 : 0}"
+  instance_id   = "${aws_instance.haproxy.id}"
+  allocation_id = "${var.haproxy_eip}"
+}
+
+
 resource "aws_eip" "openvpn_server_eip" {
   tags = {
     Role = "openvpn"
   }
 }
+

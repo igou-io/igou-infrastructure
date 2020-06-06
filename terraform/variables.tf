@@ -50,6 +50,12 @@ variable "openvpn_server_internal_cidr" {
 # HAProxy
 #####################
 
+variable "haproxy_eip"{
+  type    	= string
+  default 	= null
+  description	= "EIP Association ID for the haproxy"
+}
+
 variable "haproxy_instance_type" {
   type    = string
   default = "t2.micro"
