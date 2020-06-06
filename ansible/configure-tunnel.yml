@@ -3,12 +3,12 @@
 # tunnel between a VPN server and a number of clients.
 
 - hosts:
-    - openvpn_server_eip
+    - tag_role_openvpn_server
     - openvpn_clients
   become: yes
   roles:
     - role: openvpn
-      openvpn_servers: "{{ groups['openvpn_server_eip'] }}"
+      openvpn_servers: "{{ groups['tag_role_openvpn_server'] }}"
       openvpn_clients: "{{ groups['openvpn_clients'] }}"
       openvpn_server_proto: "udp"
       openvpn_dir: "/etc/openvpn"

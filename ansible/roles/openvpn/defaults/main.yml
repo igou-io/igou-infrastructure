@@ -6,7 +6,7 @@ openvpn_clients: []
 openvpn_server_push_routes: []
 openvpn_tunnel_cidr: "10.1.2.0/24"
 openvpn_server_proto: "tcp"
-openvpn_server_host: "{{ groups['openvpn_server_eip'][0] }}" 
+openvpn_server_host: "{{ openvpn_servers[0] }}" 
 openvpn_server_port: 1194
 
 # The interface defined to be the intranet interface on this host.
