@@ -16,6 +16,8 @@ The inspiration for this was being able to quickly serve internet facing applica
 
 Routing between an AWS VPC and a gateway node on your home network allows an easy deployment of a Kubernetes cluster sharing resources between your on-prem lab. This avoids cloud costs for dedicated processing, and easily exposing those applications to the internet.
 
+I have a node on my network I run containers/applications that are a little more sensitive (databases, object store) in additon to my k8s cluster, because if frequently gets broken/rebuilt for testing purposes.
+
 ![HLD](images/k8s-vpn-gateway.png)
 
 ## Prerequisites
@@ -45,5 +47,8 @@ ansible-playbook -i inventory/ configure-loadbalancer.yml
 Refer to `docs/`
 
 ## Planned developments
+
+* k3s deployment playbooks
+* docker node configuration playbook
 
 I am constantly working to optimize this and create my infrastructure as reproducable as possible. Feedback is welcome.
