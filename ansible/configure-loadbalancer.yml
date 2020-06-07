@@ -1,0 +1,6 @@
+- hosts: 
+    - tag_role_loadbalancer
+  become: true
+  roles:
+    - role: haproxy
+      ingress_hosts: "{{ groups['tag_kubernetes_io_cluster_default_owned'] }}"
