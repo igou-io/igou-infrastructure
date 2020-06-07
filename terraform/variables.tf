@@ -61,66 +61,78 @@ variable "haproxy_instance_type" {
   default = "t2.micro"
 }
 
-########################
-## K3S NODE VARS
-########################
-#
-#
-#variable "k3s_args" {
-#  type        = list
-#  default     = []
-#  description = "Additional k3s args (kube-proxy, kubelet, and controller args also go here"
-#}
-#
-#variable "ssh_keys" {
-#  type        = list
-#  default     = []
-#  description = "SSH Keys to inject into nodes"
-#}
-#
-#variable "data_sources" {
-#  type        = list
-#  default     = ["aws"]
-#  description = "data sources for node"
-#}
-#
-#variable "kernel_modules" {
-#  type        = list
-#  default     = []
-#  description = "kernel modules for node"
-#}
-#
-#variable "sysctls" {
-#  type        = list
-#  default     = []
-#  description = "sysctl params for node"
-#}
-#
-#variable "dns_nameservers" {
-#  type        = list
-#  default     = ["8.8.8.8", "1.1.1.1"]
-#  description = "kernel modules for node"
-#}
-#
-#variable "ntp_servers" {
-#  type        = list
-#  default     = ["0.us.pool.ntp.org", "1.us.pool.ntp.org"]
-#  description = "ntp servers"
-#}
-#
-#variable "agent_image_id" {
-#  type        = string
-#  default     = "ami-0ed92ab0a9ecbbcf4"
-#  description = "AMI to use for k3s agent instances"
-#}
-#
-#variable "agent_instance_type" {
-#  type    = string
-#  default = "t2.micro"
-#}
-#
-#variable "agent_node_count" {
-#  type        = number
-#  default     = 3
-#  description = "Number of agent nodes to launch"
-#}
+#######################
+# K3S NODE VARS
+#######################
+
+
+variable "k3s_server_ip" {
+  type        = string
+  default     = null
+  description = "IP of k3os master to join"
+}
+
+variable "k3s_cluster_secret" {
+  default     = "abcdef12345"
+  type        = string
+  description = "Secret for joining k3s cluster"
+}
+
+variable "k3s_args" {
+  type        = list
+  default     = []
+  description = "Additional k3s args (kube-proxy, kubelet, and controller args also go here"
+}
+
+variable "ssh_keys" {
+  type        = list
+  default     = []
+  description = "SSH Keys to inject into nodes"
+}
+
+variable "data_sources" {
+  type        = list
+  default     = ["aws"]
+  description = "data sources for node"
+}
+
+variable "kernel_modules" {
+  type        = list
+  default     = []
+  description = "kernel modules for node"
+}
+
+variable "sysctls" {
+  type        = list
+  default     = []
+  description = "sysctl params for node"
+}
+
+variable "dns_nameservers" {
+  type        = list
+  default     = ["8.8.8.8", "1.1.1.1"]
+  description = "kernel modules for node"
+}
+
+variable "ntp_servers" {
+  type        = list
+  default     = ["0.us.pool.ntp.org", "1.us.pool.ntp.org"]
+  description = "ntp servers"
+}
+
+variable "agent_image_id" {
+  type        = string
+  default     = "ami-0a309d8bd0ab3499a"
+  description = "AMI to use for k3s agent instances"
+}
+
+variable "agent_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "agent_node_count" {
+  type        = number
+  default     = 3
+  description = "Number of agent nodes to launch"
+}

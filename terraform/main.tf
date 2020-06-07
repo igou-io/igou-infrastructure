@@ -132,11 +132,19 @@ resource "aws_security_group" "openvpn_server_sg" {
   # Allow all traffic to Openvpn server?
   # Allow all traffic to 192.168.1.128/25?
 
+  # This should have its scope lowered in the future
   ingress {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
     security_groups = ["${aws_security_group.haproxy.id}"]
+  }
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${aws_security_group.k3os_sg.id}"]
   }
 
   # Allow ssh from control host IP
@@ -158,49 +166,34 @@ resource "aws_security_group" "openvpn_server_sg" {
 }
 
 
-#resource "aws_security_group" "k3os_sg" {
-#  vpc_id = "${aws_vpc.lab_vpc.id}"
-#  name   = "k3os_sg"
-#
-#  # Allow all outbound
-#  egress {
-#    from_port   = 0
-#    to_port     = 0
-#    protocol    = "-1"
-#    cidr_blocks = ["0.0.0.0/0"]
-#  }
-#
-#  # Allow 80 from haproxy
-#
-#  # Allow 443 from haproxy
-#
-#  # Allow all traffic to Openvpn server?
-#  # Allow all traffic to 192.168.1.128/25?
-#
-#
-#  # Allow all internal
-#  ingress {
-#    from_port   = 0
-#    to_port     = 0
-#    protocol    = "-1"
-#    cidr_blocks = ["${aws_vpc.lab_vpc.cidr_block}"]
-#  }
-#
-#  ingress {
-#    from_port       = 0
-#    to_port         = 0
-#    protocol        = "-1"
-#    security_groups = ["${aws_security_group.k3os_api.id}"]
-#  }
-#
-#  # Allow all traffic from control host IP
-#  ingress {
-#    from_port   = 22
-#    to_port     = 22
-#    protocol    = "tcp"
-#    cidr_blocks = ["0.0.0.0/0"]
-#  }
-#}
+resource "aws_security_group" "k3os_sg" {
+  vpc_id = "${aws_vpc.lab_vpc.id}"
+  name   = "k3os_sg"
+
+  # Allow all outbound
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow 80 from haproxy
+
+  # Allow 443 from haproxy
+
+  # Allow all traffic to Openvpn server?
+  # Allow all traffic to 192.168.1.128/25?
+
+
+  # Allow all internal
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["${aws_vpc.lab_vpc.cidr_block}"]
+  }
+}
 
 #EC2
 
@@ -234,20 +227,20 @@ resource "aws_instance" "openvpn_server" {
   }
 }
 
-#resource "aws_instance" "k3os_worker" {
-#  count                       = "${var.agent_node_count}"
-#  ami                         = "${var.agent_image_id}"
-#  instance_type               = "${var.agent_instance_type}"
-#  subnet_id                   = "${aws_subnet.lab_subnet.id}"
-#  associate_public_ip_address = true # Instances have public, dynamic IP
-#  vpc_security_group_ids      = ["${aws_security_group.k3os_sg.id}"]
-#  key_name                    = "${var.keypair_name}"
-#  user_data                   = "${templatefile("${path.module}/files/config_agent.sh", { ssh_keys = var.ssh_keys, data_sources = var.data_sources, kernel_modules = var.kernel_modules, sysctls = var.sysctls, dns_nameservers = var.dns_nameservers, ntp_servers = var.ntp_servers, k3s_cluster_secret = var.k3s_cluster_secret, k3s_server_ip = aws_instance.k3os_master.private_dns })}"
-#  tags = {
-#    Name                            = "k3os_worker_${count.index + 1}",
-#    "kubernetes.io/cluster/default" = "owned"
-#  }
-#}
+resource "aws_instance" "k3os_worker" {
+  count                       = "${var.agent_node_count}"
+  ami                         = "${var.agent_image_id}"
+  instance_type               = "${var.agent_instance_type}"
+  subnet_id                   = "${aws_subnet.lab_subnet.id}"
+  associate_public_ip_address = true # Instances have public, dynamic IP
+  vpc_security_group_ids      = ["${aws_security_group.k3os_sg.id}"]
+  key_name                    = "${var.keypair_name}"
+  user_data                   = "${templatefile("${path.module}/files/config_agent.yml", { ssh_keys = var.ssh_keys, data_sources = var.data_sources, kernel_modules = var.kernel_modules, sysctls = var.sysctls, dns_nameservers = var.dns_nameservers, ntp_servers = var.ntp_servers, k3s_cluster_secret = var.k3s_cluster_secret, k3s_server_ip = var.k3s_server_ip })}"
+  tags = {
+    Name                            = "k3os_worker_${count.index + 1}",
+    "kubernetes.io/cluster/default" = "owned"
+  }
+}
 
 
 
