@@ -1,0 +1,29 @@
+---
+- hosts:
+   - localhost
+  gather_facts: no
+  roles:
+    - role: node-label
+      node_group: "{{ groups['workers'] }}"
+      kube_labels:
+        node-role.kubernetes.io/worker: ""
+
+    - role: node-label
+      node_group: "{{ groups['storage'] }}"
+      kube_labels:
+        node-role.kubernetes.io/storage: ""
+
+    - role: node-label
+      node_group: "{{ groups['ingress-internal'] }}"
+      kube_labels:
+        node-role.kubernetes.io/ingress-internal: ""
+
+    - role: node-label
+      node_group: "{{ groups['climate'] }}"
+      kube_labels:
+        node-role.kubernetes.io/climate: ""
+
+    - role: node-label
+      node_group: "{{ groups['camera'] }}"
+      kube_labels:
+        node-role.kubernetes.io/camera: ""

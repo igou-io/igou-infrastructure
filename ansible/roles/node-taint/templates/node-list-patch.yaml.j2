@@ -1,0 +1,12 @@
+apiVersion: v1
+items:
+{% for host in node_group %}
+- apiVersion: v1
+  kind: Node
+  metadata:
+    name: {{ host }}
+  spec:
+    taints:
+      {{ kube_taints }}
+{% endfor %}
+kind: List
