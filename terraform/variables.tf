@@ -1,138 +1,46 @@
-####################
-# INFRA
-####################
+// AWS Credentials
+// variable "aws_access_key" {}
+// variable "aws_secret_key" {}
 
+// AWS Region where we're deploying the gateway.
+variable "region" {
+  default = "us-east-1"
+}
+
+// Primary CIDR for the gateway.
+// Connecting to resources in other VPCs will require the VPC Peering connections.
 variable "vpc_cidr" {
-  default     = "10.0.0.0/16"
-  type        = string
-  description = "VPC CIDR"
+  default = "10.0.0.0/16"
 }
 
-variable "vpc_subnet" {
-  default     = "10.0.1.0/24"
-  type        = string
-  description = "VPC Subnet"
+// Demo subnets for our resources.
+variable "vpc_public_subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
 
-variable "keypair_name" {
-  default     = "k3s_key"
-  type        = string
-  description = "Keypair name"
+// Availability zones withing region
+variable "vpc_azs" {
+  default = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
-variable "keypair_key" {
-  default     = "ssh-rsa AAAAB3NADSKJFJDSAFdsafds example@example.com"
-  type        = string
-  description = "Keypair Key"
+// Gateway instance SSH public key
+variable "gateway_ssh_public_key" {
+  default = "../ansible/keys/ssh.pub"
 }
 
-######################
-# OpenVPN Server
-######################
-
-#variable "openvpn_server_image_id" {
-#  default     = "${data.aws_ami.ubuntu}"
-#  type        = string
-#  description = "ami to use for openvpn, defaults to ubuntu"
-#}
-
-variable "openvpn_server_instance_type" {
-  type    = string
-  default = "t2.micro"
+// Gateway instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "gateway_instance_type" {
+  default = "t3.micro"
 }
 
-variable "openvpn_server_internal_cidr" {
-  type    = string
-  default = "192.168.1.128/25"
+// Gateway instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "gateway_instance_disk_size" {
+  default = "12"
 }
 
-######################
-# HAProxy
-#####################
-
-variable "haproxy_eip"{
-  type    	= string
-  default 	= null
-  description	= "EIP Association ID for the haproxy"
-}
-
-variable "haproxy_instance_type" {
-  type    = string
-  default = "t2.micro"
-}
-
-#######################
-# K3S NODE VARS
-#######################
-
-
-variable "k3s_server_ip" {
-  type        = string
-  default     = null
-  description = "IP of k3os master to join"
-}
-
-variable "k3s_cluster_secret" {
-  default     = "abcdef12345"
-  type        = string
-  description = "Secret for joining k3s cluster"
-}
-
-variable "k3s_args" {
-  type        = list
-  default     = []
-  description = "Additional k3s args (kube-proxy, kubelet, and controller args also go here"
-}
-
-variable "ssh_keys" {
-  type        = list
-  default     = []
-  description = "SSH Keys to inject into nodes"
-}
-
-variable "data_sources" {
-  type        = list
-  default     = ["aws"]
-  description = "data sources for node"
-}
-
-variable "kernel_modules" {
-  type        = list
-  default     = []
-  description = "kernel modules for node"
-}
-
-variable "sysctls" {
-  type        = list
-  default     = []
-  description = "sysctl params for node"
-}
-
-variable "dns_nameservers" {
-  type        = list
-  default     = ["8.8.8.8", "1.1.1.1"]
-  description = "kernel modules for node"
-}
-
-variable "ntp_servers" {
-  type        = list
-  default     = ["0.us.pool.ntp.org", "1.us.pool.ntp.org"]
-  description = "ntp servers"
-}
-
-variable "agent_image_id" {
-  type        = string
-  default     = "ami-0a309d8bd0ab3499a"
-  description = "AMI to use for k3s agent instances"
-}
-
-variable "agent_instance_type" {
-  type    = string
-  default = "t2.micro"
-}
-
-variable "agent_node_count" {
-  type        = number
-  default     = 3
-  description = "Number of agent nodes to launch"
+// Wireguard primary gateway CIDR.
+variable "gateway_network" {
+  default = "10.10.0.0/24"
 }
