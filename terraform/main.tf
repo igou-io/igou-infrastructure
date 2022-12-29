@@ -10,13 +10,17 @@ module "vpc_main" {
   enable_dns_hostnames = true
 }
 
-resource "aws_eip" "wireguard" {
-  instance = aws_instance.wireguard.id
-  tags = {
-    Name : "wireguard"
-  }
+resource "aws_eip_association" "wireguard" {
+  instance_id = aws_instance.wireguard.id
+  allocation_id = data.aws_eip.wireguard_ip[count.index].id
+  count = var.wireguard_ip != null ? 1 : 0
 }
 
+resource "aws_eip_association" "loadbalancer" {
+  instance_id = aws_instance.loadbalancer.id
+  allocation_id = data.aws_eip.loadbalancer_ip[count.index].id
+  count = var.loadbalancer_ip != null ? 1 : 0
+}
 
 resource "aws_security_group" "kubernetes_ingress" {
   name   = "kubernetes_ingress"
@@ -129,8 +133,8 @@ resource "aws_route" "gateway_route" {
 // Instances
 
 resource "aws_key_pair" "wireguard" {
-  key_name   = "wireguard"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDumonWRoahxRVNYQT6dt76OkYyRThQ1e0Z/lAAMHcF4ffpZ138fZVWFHipT9f85EOqLkleqLWH6b3yj37+zOOCJ4lGoTSk0oFK92neiWLGV6ayTsvGojdV/cGrSefUP04FqleZirSiwv52FYEVA21vPNweaB70L3m4i7x7+VaHqVvtPh4qT0LnnWa2Yf6Oq6aQU0WUi7Sd388SVczcWVZlJ9L+iibjtir1sm0NUE4Z+sEwHYCOfO2m6YbN809z2GQz1q+DchM0cJhpwBmwH+MIv3wjahM4Khz+XNz4bjousak63BMnZwqROf4jkoQoMrvy3Q/4WZHvivkLTu/Bj51p7TtFPTN1XNHq4kt5qzLE63HsQyhOy9lGdZpLk8cigZe14aQ1NV5WbXm0YSgPIdXTNgpHtXxzUGHjioqEhoMx4q/YBbIHZAFrX8eYorE0nhSzE63HA4cJsjMS56zAs3gk6SaG2Vux04+NwhAOftbQpF8wzwbS0QzdPzw42XKHMVDmQEW/YtPw8XVC15mmHTu6QEYjzBBYU6Noi37PXWOrad2wkq5bInIdlH6VBRuOQ0tw+9VeUlnYUoS9fD8lxcsuGiN3iVaLH8R4kptirEnr0VUBblo3fe1M3YqNiuqXpcB4HJ7sEaKIcyqEetGFRYFmbnvj4iM9BJ5uDb3pgzzmYw== digou@redhat.com" //var.gateway_ssh_public_key
+  key_name   = var.keypair_name
+  public_key = var.keypair_key
 }
 
 resource "aws_instance" "loadbalancer" {

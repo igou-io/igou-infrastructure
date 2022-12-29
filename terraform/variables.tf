@@ -1,4 +1,23 @@
+// Keys
+
+variable "keypair_name" {
+  default = null
+}
+
+variable "keypair_key" {
+  default = null
+}
+
+
 // Networking
+
+variable "loadbalancer_ip" {
+  default = null
+}
+
+variable "wireguard_ip" {
+  default = null
+}
 
 // Connecting to resources in other VPCs will require the VPC Peering connections.
 variable "vpc_cidr" {

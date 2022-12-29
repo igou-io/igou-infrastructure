@@ -11,26 +11,29 @@ output "gateway_public_dns" {
 }
 
 output "gateway_public_ip" {
-  value = aws_eip.wireguard.public_ip
+  value = aws_instance.wireguard.public_ip
 }
 
-output "var_vpc_main_route_table" {
-  value = module.vpc_main.vpc_main_route_table_id 
+output "loadbalancer_private_ip" {
+  value = aws_instance.loadbalancer.private_ip
 }
 
-output "var_default_route_table_id" {
-  value = module.vpc_main.default_route_table_id 
+output "loadbalancer_private_dns" {
+  value = aws_instance.loadbalancer.private_dns
 }
 
-output "var_default_vpc_default_route_table_id" {
-  value = module.vpc_main.default_vpc_default_route_table_id 
+output "loadbalancer_public_dns" {
+  value = aws_instance.loadbalancer.public_dns
 }
 
-output "var_default_vpc_main_route_table_id" {
-  value = module.vpc_main.default_vpc_main_route_table_id
+output "loadbalancer_public_ip" {
+  value = aws_instance.loadbalancer.public_ip
 }
 
-output "var_vpc_public_route_table_ids" {
-  value = module.vpc_main.public_route_table_ids
+output "loadbalancer_eip" {
+  value = var.loadbalancer_ip
 }
 
+output "gateway_eip" {
+  value = var.wireguard_ip
+}
