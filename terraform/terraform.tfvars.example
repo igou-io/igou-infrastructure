@@ -1,0 +1,13 @@
+loadbalancer_ip       = "23.233.61.116"
+wireguard_ip          = "13.118.28.209"
+vpc_cidr              = "10.22.0.0/16"
+vpc_public_subnets    = ["10.22.1.0/24", "10.22.2.0/24", "10.22.3.0/24"]
+
+//region              = "us-east-2" Region is defined by environment vars
+vpc_azs               = ["us-east-2a", "us-east-2b", "us-east-2c"]
+
+gateway_network       = "192.1.1.0/24"
+gateway_instance_type = "t4g.nano"
+
+keypair_name        = "aws_key"
+keypair_key         = "ssh-rsa mykey myself@domain"

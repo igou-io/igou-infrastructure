@@ -1,114 +1,94 @@
-##########################
-# IAM: Policies and Roles
-##########################
+// Networking
 
+module "vpc_main" {
+  source = "terraform-aws-modules/vpc/aws"
 
-# No IAM policies currently being used. Future possibly.
-
-# Data
-
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
-}
-
-
-
-data "aws_ami" "ubuntu" {
-    most_recent = true
-
-    filter {
-        name   = "name"
-        values = ["ubuntu-minimal/images/hvm-ssd/ubuntu-focal-20.04-amd64-minimal-*"]
-    }
-
-    owners = ["099720109477"] # Canonical
-}
-
-
-
-#Networking
-
-resource "aws_vpc" "lab_vpc" {
-  cidr_block           = "${var.vpc_cidr}"
-  enable_dns_support   = true
+  name                 = "wireguard"
+  cidr                 = var.vpc_cidr
+  public_subnets       = var.vpc_public_subnets
+  azs                  = var.vpc_azs
   enable_dns_hostnames = true
 }
 
-
-resource "aws_subnet" "lab_subnet" {
-  vpc_id     = "${aws_vpc.lab_vpc.id}"
-  cidr_block = "${var.vpc_subnet}"
+resource "aws_eip_association" "wireguard" {
+  instance_id = aws_instance.wireguard.id
+  allocation_id = data.aws_eip.wireguard_ip[count.index].id
+  count = var.wireguard_ip != null ? 1 : 0
 }
 
-
-resource "aws_internet_gateway" "lab_gw" {
-  vpc_id = "${aws_vpc.lab_vpc.id}"
+resource "aws_eip_association" "loadbalancer" {
+  instance_id = aws_instance.loadbalancer.id
+  allocation_id = data.aws_eip.loadbalancer_ip[count.index].id
+  count = var.loadbalancer_ip != null ? 1 : 0
 }
 
-# Routing
-
-resource "aws_route_table" "lab_rt" {
-  vpc_id = "${aws_vpc.lab_vpc.id}"
-
-  # Default route through Internet Gateway
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.lab_gw.id}"
+resource "aws_security_group" "kubernetes_ingress" {
+  name   = "kubernetes_ingress"
+  vpc_id = module.vpc_main.vpc_id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = [aws_security_group.wireguard.id]
   }
-  route {
-    cidr_block = "${var.openvpn_server_internal_cidr}"
-    instance_id = "${aws_instance.openvpn_server.id}"
+  ingress {
+    from_port   = 8472
+    to_port     = 8472
+    protocol    = "udp"
+    security_groups = [aws_security_group.wireguard.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-resource "aws_route_table_association" "lab_rta" {
-  subnet_id      = "${aws_subnet.lab_subnet.id}"
-  route_table_id = "${aws_route_table.lab_rt.id}"
-}
-
-
-#Security Group
-
-resource "aws_security_group" "haproxy" {
-  vpc_id = "${aws_vpc.lab_vpc.id}"
-  name   = "haproxy-sg"
-
+resource "aws_security_group" "loadbalancer" {
+  name   = "loadbalancer"
+  vpc_id = module.vpc_main.vpc_id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = [aws_security_group.wireguard.id]
+  }
   ingress {
     from_port   = 443
     to_port     = 443
-    protocol    = "TCP"
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-#  ingress {
-#    from_port   = 6443
-#    to_port     = 6443
-#    protocol    = "TCP"
-#    cidr_blocks = "${var.api_whitelist}$" #todo whitelist var, the boys are @ 76.104.91.138
-#  }
-
   ingress {
     from_port   = 6443
     to_port     = 6443
-    protocol    = "TCP"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"] #todo whitelist var
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
+resource "aws_security_group" "wireguard" {
+  name   = "wireguard"
+  vpc_id = module.vpc_main.vpc_id
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"] #todo whitelist var
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
-
-  # Allow all outbound traffic
+  ingress {
+    from_port   = 51820
+    to_port     = 51820
+    protocol    = "udp"
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -117,156 +97,102 @@ resource "aws_security_group" "haproxy" {
   }
 }
 
-resource "aws_security_group" "openvpn_server_sg" {
-  vpc_id = "${aws_vpc.lab_vpc.id}"
-  name   = "openvpn_sg"
-
-  # Allow all outbound
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow all traffic to Openvpn server?
-  # Allow all traffic to 192.168.1.128/25?
-
-  # This should have its scope lowered in the future
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["${aws_security_group.haproxy.id}"]
-  }
-
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["${aws_security_group.k3os_sg.id}"]
-  }
-
-  # Allow ssh from control host IP
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"] #todo whitelist var
-  }
-
-  # Allow udp/1194 from control IP
-  ingress {
-    from_port   = 1194
-    to_port     = 1194
-    protocol    = "UDP"
-    cidr_blocks = ["${chomp(data.http.myip.body)}/32"] #todo whitelist var
-  }
-
+resource "aws_security_group_rule" "allow_443_from_loadbalancer" {
+    type = "ingress"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    security_group_id = aws_security_group.kubernetes_ingress.id
+    source_security_group_id = aws_security_group.loadbalancer.id
 }
 
-
-resource "aws_security_group" "k3os_sg" {
-  vpc_id = "${aws_vpc.lab_vpc.id}"
-  name   = "k3os_sg"
-
-  # Allow all outbound
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow 80 from haproxy
-
-  # Allow 443 from haproxy
-
-  # Allow all traffic to Openvpn server?
-  # Allow all traffic to 192.168.1.128/25?
-
-
-  # Allow all internal
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["${aws_vpc.lab_vpc.cidr_block}"]
-  }
+resource "aws_security_group_rule" "allow_6443_from_loadbalancer" {
+    type = "ingress"
+    from_port = 6443
+    to_port = 6443
+    protocol = "tcp"
+    security_group_id = aws_security_group.wireguard.id
+    source_security_group_id = aws_security_group.loadbalancer.id
 }
 
-#EC2
+resource "aws_security_group_rule" "allow_6443_from_kubernetes_ingress" {
+    type = "ingress"
+    from_port = 6443
+    to_port = 6443
+    protocol = "tcp"
+    security_group_id = aws_security_group.wireguard.id
+    source_security_group_id = aws_security_group.kubernetes_ingress.id
+}
 
+resource "aws_route" "gateway_route" {
+  route_table_id         = module.vpc_main.public_route_table_ids[0]
+  destination_cidr_block = "10.10.1.0/24"
+  network_interface_id   = aws_instance.wireguard.primary_network_interface_id
+}
 
+// Instances
 
-resource "aws_instance" "haproxy" {
-  ami                         = "${data.aws_ami.ubuntu.id}"
-  instance_type               = "${var.haproxy_instance_type}"
-  subnet_id                   = "${aws_subnet.lab_subnet.id}"
-  associate_public_ip_address = true # Instances have public, dynamic IP
-  vpc_security_group_ids      = ["${aws_security_group.haproxy.id}"]
-  key_name                    = "${var.keypair_name}"
+resource "aws_key_pair" "wireguard" {
+  key_name   = var.keypair_name
+  public_key = var.keypair_key
+}
+
+resource "aws_instance" "loadbalancer" {
+  associate_public_ip_address = true
+  ami                    = data.aws_ami.ubuntu.id
+  subnet_id              = module.vpc_main.public_subnets[0]
+  instance_type          = var.loadbalancer_instance_type
+  key_name               = aws_key_pair.wireguard.key_name
+  vpc_security_group_ids = [aws_security_group.loadbalancer.id]
+  source_dest_check      = false
+  root_block_device {
+    volume_size = var.loadbalancer_instance_disk_size
+  }
+  lifecycle {
+    ignore_changes = [ami]
+  }
   tags = {
     role = "loadbalancer"
-    Name = "haproxy"
+    Name = "loadbalancer"
   }
 }
 
-
-resource "aws_instance" "openvpn_server" {
-  ami                         = "${data.aws_ami.ubuntu.id}"
-  instance_type               = "${var.openvpn_server_instance_type}"
-  subnet_id                   = "${aws_subnet.lab_subnet.id}"
-  associate_public_ip_address = true # Instances have public, dynamic IP
-  vpc_security_group_ids      = ["${aws_security_group.openvpn_server_sg.id}"]
-  source_dest_check           = false
-  key_name                    = "${var.keypair_name}"
-  tags = {
-    role = "openvpn_server"
-    Name = "openvpn_server"
+resource "aws_instance" "kubernetes_ingress" {
+  ami                    = data.aws_ami.ubuntu.id
+  count                  = var.kubernetes_ingress_instance_count
+  subnet_id              = module.vpc_main.public_subnets[0]
+  instance_type          = var.kubernetes_ingress_instance_type
+  key_name               = aws_key_pair.wireguard.key_name
+  vpc_security_group_ids = [aws_security_group.kubernetes_ingress.id]
+  source_dest_check      = false
+  root_block_device {
+    volume_size = var.kubernetes_ingress_instance_disk_size
   }
-}
-
-resource "aws_instance" "k3os_worker" {
-  count                       = "${var.agent_node_count}"
-  ami                         = "${var.agent_image_id}"
-  instance_type               = "${var.agent_instance_type}"
-  subnet_id                   = "${aws_subnet.lab_subnet.id}"
-  associate_public_ip_address = true # Instances have public, dynamic IP
-  vpc_security_group_ids      = ["${aws_security_group.k3os_sg.id}"]
-  key_name                    = "${var.keypair_name}"
-  user_data                   = "${templatefile("${path.module}/files/config_agent.yml", { ssh_keys = var.ssh_keys, data_sources = var.data_sources, kernel_modules = var.kernel_modules, sysctls = var.sysctls, dns_nameservers = var.dns_nameservers, ntp_servers = var.ntp_servers, k3s_cluster_secret = var.k3s_cluster_secret, k3s_server_ip = var.k3s_server_ip })}"
+  lifecycle {
+    ignore_changes = [ami]
+  }
   tags = {
-    Name                            = "k3os_worker_${count.index + 1}",
+    role = "cluster_ingress"
+    Name = "cluster_ingress-${count.index}"
     "kubernetes.io/cluster/default" = "owned"
   }
 }
 
-
-
-#Key Pair
-
-resource "aws_key_pair" "default_keypair" {
-  key_name   = "${var.keypair_name}"
-  public_key = "${var.keypair_key}"
-}
-
-
-resource "aws_eip_association" "openvpn_server_eip_assoc" {
-  instance_id   = "${aws_instance.openvpn_server.id}"
-  allocation_id = "${aws_eip.openvpn_server_eip.id}"
-}
-
-resource "aws_eip_association" "haproxy_eip_assoc" {
-  count         = "${var.haproxy_eip != null ? 1 : 0}"
-  instance_id   = "${aws_instance.haproxy.id}"
-  allocation_id = "${var.haproxy_eip}"
-}
-
-
-resource "aws_eip" "openvpn_server_eip" {
+resource "aws_instance" "wireguard" {
+  ami                    = data.aws_ami.ubuntu.id
+  subnet_id              = module.vpc_main.public_subnets[0]
+  instance_type          = var.gateway_instance_type
+  key_name               = aws_key_pair.wireguard.key_name
+  vpc_security_group_ids = [aws_security_group.wireguard.id]
+  source_dest_check      = false
+  root_block_device {
+    volume_size = var.gateway_instance_disk_size
+  }
+  lifecycle {
+    ignore_changes = [ami]
+  }
   tags = {
-    Role = "openvpn"
+    role = "wireguard_endpoint"
+    Name = "wireguard_endpoint"
   }
 }
-

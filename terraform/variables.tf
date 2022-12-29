@@ -1,138 +1,89 @@
-####################
-# INFRA
-####################
-
-variable "vpc_cidr" {
-  default     = "10.0.0.0/16"
-  type        = string
-  description = "VPC CIDR"
-}
-
-variable "vpc_subnet" {
-  default     = "10.0.1.0/24"
-  type        = string
-  description = "VPC Subnet"
-}
+// Keys
 
 variable "keypair_name" {
-  default     = "k3s_key"
-  type        = string
-  description = "Keypair name"
+  default = null
 }
 
 variable "keypair_key" {
-  default     = "ssh-rsa AAAAB3NADSKJFJDSAFdsafds example@example.com"
-  type        = string
-  description = "Keypair Key"
+  default = null
 }
 
-######################
-# OpenVPN Server
-######################
 
-#variable "openvpn_server_image_id" {
-#  default     = "${data.aws_ami.ubuntu}"
-#  type        = string
-#  description = "ami to use for openvpn, defaults to ubuntu"
-#}
+// Networking
 
-variable "openvpn_server_instance_type" {
-  type    = string
-  default = "t2.micro"
+variable "loadbalancer_ip" {
+  default = null
 }
 
-variable "openvpn_server_internal_cidr" {
-  type    = string
-  default = "192.168.1.128/25"
+variable "wireguard_ip" {
+  default = null
 }
 
-######################
-# HAProxy
-#####################
-
-variable "haproxy_eip"{
-  type    	= string
-  default 	= null
-  description	= "EIP Association ID for the haproxy"
+// Connecting to resources in other VPCs will require the VPC Peering connections.
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
 }
 
-variable "haproxy_instance_type" {
-  type    = string
-  default = "t2.micro"
+// Demo subnets for our resources.
+variable "vpc_public_subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
 
-#######################
-# K3S NODE VARS
-#######################
-
-
-variable "k3s_server_ip" {
-  type        = string
-  default     = null
-  description = "IP of k3os master to join"
+// Availability zones withing region
+variable "vpc_azs" {
+  default = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
-variable "k3s_cluster_secret" {
-  default     = "abcdef12345"
-  type        = string
-  description = "Secret for joining k3s cluster"
+// Gateway
+
+// Gateway instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "gateway_instance_type" {
+  default = "t4g.nano"
 }
 
-variable "k3s_args" {
-  type        = list
-  default     = []
-  description = "Additional k3s args (kube-proxy, kubelet, and controller args also go here"
+// Gateway instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "gateway_instance_disk_size" {
+  default = "12"
 }
 
-variable "ssh_keys" {
-  type        = list
-  default     = []
-  description = "SSH Keys to inject into nodes"
+// Wireguard primary gateway CIDR.
+// This could be made to accept a list in the future?
+variable "gateway_network" {
+  default = "10.10.0.0/24"
 }
 
-variable "data_sources" {
-  type        = list
-  default     = ["aws"]
-  description = "data sources for node"
+// Kubernetes ingress nodes
+
+// Kubernetes ingress node instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "kubernetes_ingress_instance_type" {
+  default = "t4g.nano"
 }
 
-variable "kernel_modules" {
-  type        = list
-  default     = []
-  description = "kernel modules for node"
+variable "kubernetes_ingress_instance_count" {
+  default = "1"
 }
 
-variable "sysctls" {
-  type        = list
-  default     = []
-  description = "sysctl params for node"
+// Kubernetes instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "kubernetes_ingress_instance_disk_size" {
+  default = "12"
 }
 
-variable "dns_nameservers" {
-  type        = list
-  default     = ["8.8.8.8", "1.1.1.1"]
-  description = "kernel modules for node"
+// Loadbalancer nodes
+
+// Loadbalancer node instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "loadbalancer_instance_type" {
+  default = "t4g.nano"
 }
 
-variable "ntp_servers" {
-  type        = list
-  default     = ["0.us.pool.ntp.org", "1.us.pool.ntp.org"]
-  description = "ntp servers"
+
+// Loadbalancer instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "loadbalancer_instance_disk_size" {
+  default = "12"
 }
 
-variable "agent_image_id" {
-  type        = string
-  default     = "ami-0a309d8bd0ab3499a"
-  description = "AMI to use for k3s agent instances"
-}
-
-variable "agent_instance_type" {
-  type    = string
-  default = "t2.micro"
-}
-
-variable "agent_node_count" {
-  type        = number
-  default     = 3
-  description = "Number of agent nodes to launch"
-}
