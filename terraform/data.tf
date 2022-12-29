@@ -1,10 +1,14 @@
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] // canonical
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-*-server-*"]
   }
 
   filter {
@@ -14,6 +18,6 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "architecture"
-    values = ["x86_64"]
+    values = ["arm64"]
   }
 }

@@ -1,13 +1,5 @@
-// AWS Credentials
-// variable "aws_access_key" {}
-// variable "aws_secret_key" {}
+// Networking
 
-// AWS Region where we're deploying the gateway.
-variable "region" {
-  default = "us-east-1"
-}
-
-// Primary CIDR for the gateway.
 // Connecting to resources in other VPCs will require the VPC Peering connections.
 variable "vpc_cidr" {
   default = "10.0.0.0/16"
@@ -23,15 +15,12 @@ variable "vpc_azs" {
   default = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
-// Gateway instance SSH public key
-variable "gateway_ssh_public_key" {
-  default = "../ansible/keys/ssh.pub"
-}
+// Gateway
 
 // Gateway instance type.
 // t3.micro will be enough for most users, depending on connected devices.
 variable "gateway_instance_type" {
-  default = "t3.micro"
+  default = "t4g.nano"
 }
 
 // Gateway instance disk volume size.
@@ -41,6 +30,41 @@ variable "gateway_instance_disk_size" {
 }
 
 // Wireguard primary gateway CIDR.
+// This could be made to accept a list in the future?
 variable "gateway_network" {
   default = "10.10.0.0/24"
 }
+
+// Kubernetes ingress nodes
+
+// Kubernetes ingress node instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "kubernetes_ingress_instance_type" {
+  default = "t4g.nano"
+}
+
+variable "kubernetes_ingress_instance_count" {
+  default = "1"
+}
+
+// Kubernetes instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "kubernetes_ingress_instance_disk_size" {
+  default = "12"
+}
+
+// Loadbalancer nodes
+
+// Loadbalancer node instance type.
+// t3.micro will be enough for most users, depending on connected devices.
+variable "loadbalancer_instance_type" {
+  default = "t4g.nano"
+}
+
+
+// Loadbalancer instance disk volume size.
+// We're not storing any data so any smaller volume size would work fine.
+variable "loadbalancer_instance_disk_size" {
+  default = "12"
+}
+
