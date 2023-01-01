@@ -6,6 +6,12 @@ ansible/inventory/inventory
 ansible/openvpn-client-certs/*
 terraform/.terraform/*
 terraform/.terraform
+inventory.yaml
+ansible/roles/geerlingguy.docker/
+ansible/roles/geerlingguy.docker_arm/
+ansible/roles/geerlingguy.pip/
+ansible/roles/githubixx.ansible_role_wireguard/
+ansible/roles/xanmanning.k3s/
 *.swp
 # Local .terraform directories
 **/.terraform/*
@@ -42,3 +48,21 @@ override.tf.json
 .terraformrc
 terraform.rc
 .terraform.lock.hcl
+
+*.retry
+
+# Ansible runtime and backups
+*.original
+*.tmp
+*.bkp
+*.retry
+*.*~
+
+# Exclude all binaries
+*.bin
+*.jar
+*.tar
+*.zip
+*.gzip
+*.tgz
+
