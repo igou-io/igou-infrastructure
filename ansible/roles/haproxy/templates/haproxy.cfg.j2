@@ -76,7 +76,7 @@ frontend kubernetes-api-server
 backend kubernetes-api-server
     balance source
     mode tcp
-{% for m in groups.masters %}
+{% for m in masters %}
     server {{ m }} {{ m }}:6443 check
 {% endfor %}
     
@@ -90,21 +90,9 @@ backend ingress-https
     balance source
     mode tcp
 {% for host in ingress_hosts %}
-    server {{ hostvars[host]['ec2_private_ip_address'] }} {{ hostvars[host]['ec2_private_ip_address'] }}:443 check send-proxy
+    server {{ host }} {{ host }}:443 check send-proxy
 {% endfor %}
 
-frontend ingress-http
-    bind *:80
-    default_backend ingress-http
-    mode tcp
-    option tcplog
-
-backend ingress-http
-    balance source
-    mode tcp
-{% for host in ingress_hosts %}
-    server {{ hostvars[host]['ec2_private_ip_address'] }} {{ hostvars[host]['ec2_private_ip_address'] }}:80 check send-proxy
-{% endfor %}
 
 #---------------------------------------------------------------------
 
