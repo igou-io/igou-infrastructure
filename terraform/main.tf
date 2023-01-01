@@ -26,6 +26,24 @@ resource "aws_security_group" "kubernetes_ingress" {
   name   = "kubernetes_ingress"
   vpc_id = module.vpc_main.vpc_id
   ingress {
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    security_groups = [aws_security_group.wireguard.id]
+  }
+  ingress {
+    from_port   = 10254
+    to_port     = 10254
+    protocol    = "tcp"
+    security_groups = [aws_security_group.wireguard.id]
+  }
+  ingress {
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    security_groups = [aws_security_group.wireguard.id]
+  }
+  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -120,6 +138,15 @@ resource "aws_security_group_rule" "allow_6443_from_kubernetes_ingress" {
     from_port = 6443
     to_port = 6443
     protocol = "tcp"
+    security_group_id = aws_security_group.wireguard.id
+    source_security_group_id = aws_security_group.kubernetes_ingress.id
+}
+
+resource "aws_security_group_rule" "allow_udp_8472_from_kubernetes_ingress" {
+    type = "ingress"
+    from_port = 8472
+    to_port = 8472
+    protocol = "udp"
     security_group_id = aws_security_group.wireguard.id
     source_security_group_id = aws_security_group.kubernetes_ingress.id
 }

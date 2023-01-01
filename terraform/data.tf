@@ -2,7 +2,6 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
-
 // If provided IPs are null, do nothing
 data "aws_eip" "loadbalancer_ip" {
   public_ip = var.loadbalancer_ip
@@ -20,7 +19,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
+    values = ["ubuntu-minimal/images/hvm-ssd/ubuntu-jammy-22.04-arm64-minimal-*"]
   }
 
   filter {
