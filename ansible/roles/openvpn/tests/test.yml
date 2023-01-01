@@ -1,5 +1,0 @@
----
-- hosts: openvpn
-  connection: local
-  roles:
-    - stackhpc.openvpn
