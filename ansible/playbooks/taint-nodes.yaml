@@ -1,0 +1,18 @@
+---
+- hosts:
+   - localhost
+  gather_facts: no
+  roles:
+    - role: node-taint
+      node_group: "{{ groups['camera'] }}"
+      kube_taints:
+        - effect: NoSchedule
+          key: iot
+          value: "true"
+
+    - role: node-taint
+      node_group: "{{ groups['climate'] }}"
+      kube_taints:
+        - effect: NoSchedule
+          key: iot
+          value: "true"
