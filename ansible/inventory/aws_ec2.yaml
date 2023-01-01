@@ -1,0 +1,14 @@
+# demo.aws_ec2.yml
+plugin: amazon.aws.aws_ec2
+
+regions:
+- us-east-2
+
+keyed_groups:
+  - prefix: tag
+    key: tags.role
+
+allow_duplicated_hosts: True
+
+hostnames:
+  - dns-name

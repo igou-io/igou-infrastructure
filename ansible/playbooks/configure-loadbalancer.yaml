@@ -1,0 +1,8 @@
+- hosts: 
+    - loadbalancer
+  become: true
+  roles:
+    - role: haproxy
+      ingress_hosts: "{{ groups['private_cluster_ingress'] }}"
+      masters:
+        - 10.10.1.10

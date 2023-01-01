@@ -1,0 +1,14 @@
+# demo.aws_ec2.yml
+plugin: aws_ec2
+
+regions:
+- us-east-2
+
+keyed_groups:
+  - prefix: private
+    key: tags.role
+
+allow_duplicated_hosts: True
+
+hostnames:
+  - private-ip-address
