@@ -10,6 +10,14 @@ output "gateway_public_dns" {
   value = aws_instance.wireguard.public_dns
 }
 
+output "k8s_security_groups" {
+  value = data.aws_security_group.k8s_security_groups.*.id
+}
+
+output "wireguard_security_groups" {
+  value = data.aws_security_group.wireguard_security_groups.*.id
+}
+
 output "gateway_public_ip" {
   value = aws_instance.wireguard.public_ip
 }

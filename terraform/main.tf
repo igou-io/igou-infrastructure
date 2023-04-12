@@ -170,7 +170,7 @@ resource "aws_instance" "loadbalancer" {
   subnet_id              = module.vpc_main.public_subnets[0]
   instance_type          = var.loadbalancer_instance_type
   key_name               = aws_key_pair.wireguard.key_name
-  vpc_security_group_ids = [aws_security_group.loadbalancer.id]
+  vpc_security_group_ids = concat(data.aws_security_group.k8s_security_groups.*.id, [aws_security_group.loadbalancer.id])
   source_dest_check      = false
   root_block_device {
     volume_size = var.loadbalancer_instance_disk_size
@@ -210,7 +210,7 @@ resource "aws_instance" "wireguard" {
   subnet_id              = module.vpc_main.public_subnets[0]
   instance_type          = var.gateway_instance_type
   key_name               = aws_key_pair.wireguard.key_name
-  vpc_security_group_ids = [aws_security_group.wireguard.id]
+  vpc_security_group_ids = concat(data.aws_security_group.wireguard_security_groups.*.id, [aws_security_group.wireguard.id])
   source_dest_check      = false
   root_block_device {
     volume_size = var.gateway_instance_disk_size
