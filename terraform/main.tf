@@ -22,47 +22,6 @@ resource "aws_eip_association" "loadbalancer" {
   count = var.loadbalancer_ip != null ? 1 : 0
 }
 
-resource "aws_security_group" "kubernetes_ingress" {
-  name   = "kubernetes_ingress"
-  vpc_id = module.vpc_main.vpc_id
-  ingress {
-    from_port   = 10250
-    to_port     = 10250
-    protocol    = "tcp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  ingress {
-    from_port   = 10254
-    to_port     = 10254
-    protocol    = "tcp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  ingress {
-    from_port   = 9100
-    to_port     = 9100
-    protocol    = "tcp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  ingress {
-    from_port   = 8472
-    to_port     = 8472
-    protocol    = "udp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 resource "aws_security_group" "loadbalancer" {
   name   = "loadbalancer"
   vpc_id = module.vpc_main.vpc_id
@@ -115,12 +74,12 @@ resource "aws_security_group" "wireguard" {
   }
 }
 
-resource "aws_security_group_rule" "allow_443_from_loadbalancer" {
+resource "aws_security_group_rule" "allow_30443_from_loadbalancer" {
     type = "ingress"
-    from_port = 443
-    to_port = 443
+    from_port = 30443
+    to_port = 30443
     protocol = "tcp"
-    security_group_id = aws_security_group.kubernetes_ingress.id
+    security_group_id = aws_security_group.wireguard.id
     source_security_group_id = aws_security_group.loadbalancer.id
 }
 
@@ -131,24 +90,6 @@ resource "aws_security_group_rule" "allow_6443_from_loadbalancer" {
     protocol = "tcp"
     security_group_id = aws_security_group.wireguard.id
     source_security_group_id = aws_security_group.loadbalancer.id
-}
-
-resource "aws_security_group_rule" "allow_6443_from_kubernetes_ingress" {
-    type = "ingress"
-    from_port = 6443
-    to_port = 6443
-    protocol = "tcp"
-    security_group_id = aws_security_group.wireguard.id
-    source_security_group_id = aws_security_group.kubernetes_ingress.id
-}
-
-resource "aws_security_group_rule" "allow_udp_8472_from_kubernetes_ingress" {
-    type = "ingress"
-    from_port = 8472
-    to_port = 8472
-    protocol = "udp"
-    security_group_id = aws_security_group.wireguard.id
-    source_security_group_id = aws_security_group.kubernetes_ingress.id
 }
 
 resource "aws_route" "gateway_route" {
@@ -181,27 +122,6 @@ resource "aws_instance" "loadbalancer" {
   tags = {
     role = "loadbalancer"
     Name = "loadbalancer"
-  }
-}
-
-resource "aws_instance" "kubernetes_ingress" {
-  ami                    = data.aws_ami.ubuntu.id
-  count                  = var.kubernetes_ingress_instance_count
-  subnet_id              = module.vpc_main.public_subnets[0]
-  instance_type          = var.kubernetes_ingress_instance_type
-  key_name               = aws_key_pair.wireguard.key_name
-  vpc_security_group_ids = [aws_security_group.kubernetes_ingress.id]
-  source_dest_check      = false
-  root_block_device {
-    volume_size = var.kubernetes_ingress_instance_disk_size
-  }
-  lifecycle {
-    ignore_changes = [ami]
-  }
-  tags = {
-    role = "cluster_ingress"
-    Name = "cluster_ingress-${count.index}"
-    "kubernetes.io/cluster/default" = "owned"
   }
 }
 
