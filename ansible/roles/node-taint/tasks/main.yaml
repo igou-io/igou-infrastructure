@@ -1,7 +1,0 @@
-- name: Apply taints to nodes
-  k8s:
-    merge_type: strategic-merge
-    state: present
-    definition: "{{ lookup ('template', '../templates/node-list-patch.yaml.j2') | from_yaml }}"
-    validate:
-      fail_on_error: yes

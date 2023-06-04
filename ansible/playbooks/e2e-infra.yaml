@@ -1,4 +1,0 @@
----
-
-- import_playbook: configure-wireguard.yaml
-- import_playbook: configure-loadbalancer.yaml
