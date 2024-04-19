@@ -15,24 +15,6 @@ resource "aws_eip_association" "loadbalancer" {
 resource "aws_security_group" "loadbalancer" {
   name   = "loadbalancer"
   vpc_id = module.vpc_main.vpc_id
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [aws_security_group.wireguard.id]
-  }
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
-  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -44,24 +26,21 @@ resource "aws_security_group" "loadbalancer" {
 resource "aws_security_group" "wireguard" {
   name   = "wireguard"
   vpc_id = module.vpc_main.vpc_id
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
-  }
-  ingress {
-    from_port   = 51820
-    to_port     = 51820
-    protocol    = "udp"
-    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
-  }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group_rule" "allow_all_443_inbound_loadbalanacer" {
+    type = "ingress"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    security_group_id = aws_security_group.loadbalancer.id
+    cidr_blocks = ["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "allow_30443_from_loadbalancer" {
@@ -80,6 +59,42 @@ resource "aws_security_group_rule" "allow_6443_from_loadbalancer" {
     protocol = "tcp"
     security_group_id = aws_security_group.wireguard.id
     source_security_group_id = aws_security_group.loadbalancer.id
+}
+
+resource "aws_security_group_rule" "allow_22_from_wireguard" {
+    type = "ingress"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    security_group_id = aws_security_group.loadbalancer.id
+    source_security_group_id = aws_security_group.wireguard.id
+}
+
+resource "aws_security_group_rule" "allow_6443_from_sourceip" {
+    type = "ingress"
+    from_port = 6443
+    to_port = 6443
+    protocol = "tcp"
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+    security_group_id = aws_security_group.loadbalancer.id
+}
+
+resource "aws_security_group_rule" "allow_51820_from_sourceip" {
+    type = "ingress"
+    from_port = 51820
+    to_port = 51820
+    protocol = "udp"
+    security_group_id = aws_security_group.wireguard.id
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+}
+
+resource "aws_security_group_rule" "allow_22_from_sourceip" {
+    type = "ingress"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    security_group_id = aws_security_group.wireguard.id
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
 }
 
 resource "aws_route" "gateway_route" {
