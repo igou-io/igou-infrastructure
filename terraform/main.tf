@@ -1,15 +1,5 @@
 // Networking
 
-module "vpc_main" {
-  source = "terraform-aws-modules/vpc/aws"
-
-  name                 = "wireguard"
-  cidr                 = var.vpc_cidr
-  public_subnets       = var.vpc_public_subnets
-  azs                  = var.vpc_azs
-  enable_dns_hostnames = true
-}
-
 resource "aws_eip_association" "wireguard" {
   instance_id = aws_instance.wireguard.id
   allocation_id = data.aws_eip.wireguard_ip[count.index].id
