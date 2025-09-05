@@ -1,42 +1,20 @@
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
+data "http" "myip_v4" {
+  count = var.loadbalancer_restricted_ports_allow_my_ip ? 1 : 0
+  url   = "https://ipv4.icanhazip.com"
+  request_headers = {
+    "User-Agent" = "terraform"
+  }
+}
+
+locals {
+  my_ip_cidr = var.loadbalancer_restricted_ports_allow_my_ip ? "${chomp(data.http.myip_v4[0].response_body)}/32" : null
+  allowed_ips = var.loadbalancer_restricted_ports_allow_my_ip ? concat(var.loadbalancer_restricted_ports_allowed_ips, [local.my_ip_cidr]) : var.loadbalancer_restricted_ports_allowed_ips
 }
 
 // If provided IPs are null, do nothing
 data "aws_eip" "loadbalancer_ip" {
   public_ip = var.loadbalancer_ip
   count = var.loadbalancer_ip != null ? 1 : 0
-}
-
-data "aws_eip" "wireguard_ip" {
-  public_ip = var.wireguard_ip
-  count = var.wireguard_ip != null ? 1 : 0
-}
-
-data "aws_security_group" "wireguard_security_groups" {
-  count = length(data.aws_security_groups.wireguard_security_groups.ids)
-
-  id = data.aws_security_groups.wireguard_security_groups.ids[count.index]
-}
-
-data "aws_security_groups" "wireguard_security_groups" {
-  filter {
-    name   = "tag:wireguard"
-    values = ["true"]
-  }
-}
-
-data "aws_security_group" "k8s_security_groups" {
-  count = length(data.aws_security_groups.k8s_security_groups.ids)
-
-  id = data.aws_security_groups.k8s_security_groups.ids[count.index]
-}
-
-data "aws_security_groups" "k8s_security_groups" {
-  filter {
-    name   = "tag:k8scli"
-    values = ["true"]
-  }
 }
 
 data "aws_ami" "ubuntu" {
