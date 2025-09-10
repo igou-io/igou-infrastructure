@@ -1,6 +1,10 @@
 terraform {
   required_version = "~> 1.2"
-  backend "s3" {}
+  backend "s3" {
+    key = "terraform.tfstate"
+    bucket = "igou-tfstate"
+    region = "us-east-2"
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,4 +17,6 @@ terraform {
   }
 }
 
-provider "aws" {}
+provider "aws" {
+     region = var.aws_region
+}

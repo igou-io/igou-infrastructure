@@ -1,3 +1,9 @@
+// Region
+
+variable "aws_region" {
+  default = null
+}
+
 // Keys
 
 variable "keypair_name" {
